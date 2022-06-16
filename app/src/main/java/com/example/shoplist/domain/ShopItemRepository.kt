@@ -1,5 +1,7 @@
 package com.example.shoplist.domain
 
+import kotlinx.coroutines.flow.StateFlow
+
 interface ShopItemRepository {
 
     fun addShopItem(shopItem: ShopItem)
@@ -8,7 +10,7 @@ interface ShopItemRepository {
 
     fun getShopItem(id: Int): ShopItem
 
-    fun getShopList(): List<ShopItem>
+    fun getShopList(): StateFlow<List<ShopItem>>
 
     fun updateShopItem(shopItem: ShopItem)
 }
