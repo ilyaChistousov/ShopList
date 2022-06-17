@@ -1,43 +1,72 @@
 package com.example.shoplist.presentation
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.example.shoplist.R
-import com.example.shoplist.domain.ShopItem
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
+import com.example.shoplist.databinding.ActivityMainBinding
+import com.google.android.material.snackbar.Snackbar
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(){
 
-    private lateinit var mainViewModel: MainViewModel
+    private lateinit var binding: ActivityMainBinding
+    private val mainViewModel: MainViewModel by lazy {
+        ViewModelProvider(this)[MainViewModel::class.java]
+    }
+    private lateinit var adapter: ShopListAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        mainViewModel = ViewModelProvider(this)[MainViewModel::class.java]
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setupRecyclerView()
+    }
 
+    private fun setupRecyclerView() {
+        adapter = ShopListAdapter()
+        binding.recyclerListItems.adapter = adapter
         lifecycleScope.launchWhenStarted {
-            mainViewModel.shopList.collect{
-                Log.d("MainActivity", it.toString())
+            mainViewModel.shopList.collect {
+                adapter.submitList(it)
             }
         }
 
-        lifecycleScope.launchWhenStarted {
-            mainViewModel.deleteItemShop(mainViewModel.shopList.value[0])
-        }
+        setupLongClickListener()
+        setupClickListener()
+        setupSwipeListener()
+    }
 
-        lifecycleScope.launchWhenStarted {
-            mainViewModel.updateItemShop(mainViewModel.shopList.value[1])
-        }
-
-        lifecycleScope.launchWhenStarted {
-            mainViewModel.shopList.collect{
-                Log.d("MainActivity", it.toString())
-            }
+    private fun setupLongClickListener() {
+        adapter.onItemShopLongClickListener = {
+            mainViewModel.updateItemShop(it)
         }
     }
+
+    private fun setupClickListener() {
+        adapter.onItemShopClickListener = {
+            Snackbar.make(binding.root, "$it was clicked", Snackbar.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun setupSwipeListener() {
+        val callback =  object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                mainViewModel.deleteItemShop(adapter.currentList[viewHolder.adapterPosition])
+            }
+        }
+
+        val itemTouchHelper = ItemTouchHelper(callback)
+        itemTouchHelper.attachToRecyclerView(binding.recyclerListItems)
+    }
+
 }
