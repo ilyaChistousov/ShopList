@@ -7,9 +7,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.shoplist.databinding.ActivityMainBinding
-import com.google.android.material.snackbar.Snackbar
 
-class MainActivity : AppCompatActivity(){
+class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val mainViewModel: MainViewModel by lazy {
@@ -22,6 +21,10 @@ class MainActivity : AppCompatActivity(){
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setupRecyclerView()
+        binding.buttonAddItem.setOnClickListener {
+            val intent = ItemShopActivity.newIntentAddItem(this)
+            startActivity(intent)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -32,7 +35,6 @@ class MainActivity : AppCompatActivity(){
                 adapter.submitList(it)
             }
         }
-
         setupLongClickListener()
         setupClickListener()
         setupSwipeListener()
@@ -46,12 +48,13 @@ class MainActivity : AppCompatActivity(){
 
     private fun setupClickListener() {
         adapter.onItemShopClickListener = {
-            Snackbar.make(binding.root, "$it was clicked", Snackbar.LENGTH_SHORT).show()
+            val intent = ItemShopActivity.newIntentUpdateItem(this, it.id)
+            startActivity(intent)
         }
     }
 
     private fun setupSwipeListener() {
-        val callback =  object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
+        val callback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
             override fun onMove(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
