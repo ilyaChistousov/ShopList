@@ -1,14 +1,17 @@
 package com.example.shoplist.presentation
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.example.shoplist.R
 import com.example.shoplist.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditChangeListener {
 
     private lateinit var binding: ActivityMainBinding
     private val mainViewModel: MainViewModel by lazy {
@@ -22,8 +25,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         setupRecyclerView()
         binding.buttonAddItem.setOnClickListener {
-            val intent = ItemShopActivity.newIntentAddItem(this)
-            startActivity(intent)
+            if (isOnePaneMode()) {
+                val intent = ItemShopActivity.newIntentAddItem(this)
+                startActivity(intent)
+            } else {
+                launchContainer(ShopItemFragment.newInstanceAddMode())
+            }
         }
     }
 
@@ -46,10 +53,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun isOnePaneMode(): Boolean {
+        return binding.fragmentContainer == null
+    }
+
+    private fun launchContainer(fragment: Fragment) {
+        supportFragmentManager.popBackStack()
+        supportFragmentManager
+            .beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
     private fun setupClickListener() {
         adapter.onItemShopClickListener = {
-            val intent = ItemShopActivity.newIntentUpdateItem(this, it.id)
-            startActivity(intent)
+            if (isOnePaneMode()) {
+                val intent = ItemShopActivity.newIntentUpdateItem(this, it.id)
+                startActivity(intent)
+            } else {
+                launchContainer(ShopItemFragment.newInstanceEditMode(it.id))
+            }
         }
     }
 
@@ -72,4 +96,8 @@ class MainActivity : AppCompatActivity() {
         itemTouchHelper.attachToRecyclerView(binding.recyclerListItems)
     }
 
+    override fun onEditChange() {
+        Toast.makeText(this@MainActivity, "Success", Toast.LENGTH_SHORT).show()
+        supportFragmentManager.popBackStack()
+    }
 }
